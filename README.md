@@ -20,5 +20,5 @@ Tools for Mongo database operation
 Данный сервис используется в ПО Fenix Security Scanner
 
 ## Warning
-Данный сервис находится в разработке!
+Сервис находится в разработке!
 <p>This is a development version, we don't recommend its use in production!</p>

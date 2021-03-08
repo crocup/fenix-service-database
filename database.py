@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict
 from pymongo import MongoClient
 import logging
+from bson.json_util import dumps
 
 
 class Driver(ABC):
@@ -24,6 +25,14 @@ class Driver(ABC):
 
     @abstractmethod
     def update(self, message, new_values):
+        pass
+
+    @abstractmethod
+    def get_one(self, message):
+        pass
+
+    @abstractmethod
+    def get_all(self):
         pass
 
 
@@ -64,8 +73,20 @@ class MongoDriver(Driver):
         self._update_message(message, new_value)
 
     def _update_message(self, message, new_value):
-        self.collection.update_one(message, {'$set': new_value})
+        self.collection.update_one(message, {'$set': new_value}, upsert=True)
         logging.info(f'Updated: {message}')
+
+    def get_one(self, message):
+        return self._get_one_message(message)
+
+    def _get_one_message(self, message):
+        return self.collection.find_one(message)
+
+    def get_all(self):
+        return self._get_all_message()
+
+    def _get_all_message(self):
+        return self.collection.find()
 
 
 class Producer(ABC):
@@ -73,31 +94,51 @@ class Producer(ABC):
         self.driver = driver
 
     @abstractmethod
-    def insert(self, message: Dict):
+    def insert_message(self, message: Dict):
         pass
 
     @abstractmethod
-    def delete(self, message: Dict):
+    def delete_message(self, message: Dict):
         pass
 
     @abstractmethod
-    def update(self, message: Dict, new_value: Dict):
+    def update_message(self, message: Dict, new_value: Dict):
+        pass
+
+    @abstractmethod
+    def get_message(self, message: Dict):
+        pass
+
+    @abstractmethod
+    def get_all_message(self):
         pass
 
 
 class MessageProducer(Producer):
 
-    def insert(self, message: Dict):
+    def insert_message(self, message: Dict):
         self.driver.connect()
         self.driver.insert(message)
         self.driver.disconnect()
 
-    def delete(self, message: Dict):
+    def delete_message(self, message: Dict):
         self.driver.connect()
         self.driver.delete(message)
         self.driver.disconnect()
 
-    def update(self, message: Dict, new_value: Dict):
+    def update_message(self, message: Dict, new_value: Dict):
         self.driver.connect()
         self.driver.update(message, new_value)
         self.driver.disconnect()
+
+    def get_message(self, message: Dict):
+        self.driver.connect()
+        result = self.driver.get_one(message)
+        self.driver.disconnect()
+        return dumps(result)
+
+    def get_all_message(self):
+        self.driver.connect()
+        result = self.driver.get_all()
+        self.driver.disconnect()
+        return dumps(result)

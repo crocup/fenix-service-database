@@ -8,12 +8,12 @@ app.config.from_object(config.DevelopmentConfig)
 
 
 @app.route('/', methods=['GET'])
-def hello_world():
+def message_test():
     message_mongo = MessageProducer(MongoDriver(host='localhost', port=27017, base="test", collection="test"))
     message_mongo.insert({'name': 'test5'})
     message_mongo.update({'_id': ObjectId('603e1e87e665a10ae2a87b3e')}, {'name': 'test543785683476'})
     message_mongo.delete({'_id': ObjectId('603e1e87e665a10ae2a87b3e')})
-    return 'Hello World!'
+    return 'OK'
 
 
 if __name__ == '__main__':

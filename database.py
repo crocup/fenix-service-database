@@ -1,8 +1,20 @@
+import json
 from abc import ABC, abstractmethod
 from typing import Dict
+from bson import ObjectId
 from pymongo import MongoClient
 import logging
-from bson.json_util import dumps
+
+
+# message_mongo = MessageProducer(MongoDriver(host='localhost', port=27017,
+#                                                 base=data["base"], collection=data["collection"]))
+# result = message_mongo.get_message(message=data["data"])
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
 
 
 class Driver(ABC):
@@ -33,6 +45,10 @@ class Driver(ABC):
 
     @abstractmethod
     def get_all(self):
+        pass
+
+    @abstractmethod
+    def get_message_limit(self, count):
         pass
 
 
@@ -66,7 +82,7 @@ class MongoDriver(Driver):
         self._delete_message(message)
 
     def _delete_message(self, message):
-        self.collection.delete_one(message)
+        self.collection.remove(message)
         logging.info(f'Deleted: {message}')
 
     def update(self, message, new_value):
@@ -80,13 +96,19 @@ class MongoDriver(Driver):
         return self._get_one_message(message)
 
     def _get_one_message(self, message):
-        return self.collection.find_one(message)
+        return self.collection.find(message)
 
     def get_all(self):
         return self._get_all_message()
 
     def _get_all_message(self):
         return self.collection.find()
+
+    def get_message_limit(self, count):
+        return self._get_message_limit(count)
+
+    def _get_message_limit(self, count):
+        return self.collection.find().sort("_id", -1).limit(count)
 
 
 class Producer(ABC):
@@ -113,6 +135,10 @@ class Producer(ABC):
     def get_all_message(self):
         pass
 
+    @abstractmethod
+    def get_message_limit(self, count: int):
+        pass
+
 
 class MessageProducer(Producer):
 
@@ -135,10 +161,16 @@ class MessageProducer(Producer):
         self.driver.connect()
         result = self.driver.get_one(message)
         self.driver.disconnect()
-        return dumps(result)
+        return result
 
     def get_all_message(self):
         self.driver.connect()
         result = self.driver.get_all()
         self.driver.disconnect()
-        return dumps(result)
+        return result
+
+    def get_message_limit(self, count: int):
+        self.driver.connect()
+        result = self.driver.get_message_limit(count)
+        self.driver.disconnect()
+        return result

@@ -1,7 +1,7 @@
-<h1 align="center" style="border-bottom: none !important; margin-bottom: 5px !important;"><a href="#">Service Database</a></h1>
-<p align="center">Сервис для работы базы данных Mongo</p>
+<h1 align="center" style="border-bottom: none !important; margin-bottom: 5px !important;"><a href="#">Class Database</a></h1>
+<p align="center">Класс для работы с базами данных (пример: Mongo)</p>
 <p align="center">
-Tools for Mongo database operation
+Class for database operation (example: Mongo)
 </p>
 <p align="center">
   <a href="#">
@@ -16,9 +16,20 @@ Tools for Mongo database operation
 </p>
 
 # About
-Сервис предназначен для распределенной работы с БД Mongo.
-Данный сервис используется в ПО Fenix Security Scanner
+Пример класса для работы с базами данными.
+`Данный класс используется в ПО Fenix Security Scanner`
 
-## Warning
-Сервис находится в разработке!
-<p>This is a development version, we don't recommend its use in production!</p>
+## Usage
+Объявление:
+```python
+message_mongo = MessageProducer(MongoDriver(host='localhost', port=27017,
+                                                 base="base", collection="collection"))
+```
+
+## Example
+Пример использования: Получение записи из БД Mongo
+```python
+message_mongo = MessageProducer(MongoDriver(host='localhost', port=27017,
+                                                 base="base", collection="collection"))
+result = message_mongo.get_message(message={"name": "Ivan"})
+```
